@@ -2,6 +2,12 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url"; // لجعل المسارات تعمل مع ES Modules
+
+// تعريف مسارات العمل للملفات (ضروري لـ Render)
+const __filename = fileURLToPath(import.meta.url);
+const _dirname = path.dirname(_filename);
 
 // قراءة المتغيرات من ملف .env
 dotenv.config();
@@ -11,10 +17,23 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔹 راوت بسيط لفحص السيرفر
-app.get("/", (req, res) => {
-  res.send("✅ SmartTalk Server is running!");
+// ===================================================
+// 🛠  كود خدمة الواجهة الأمامية (Frontend)
+// ===================================================
+
+// 1. يخدم الملفات الثابتة (CSS, JS, images) من مجلد public
+// هذا يسمح للمتصفح بتحميل ملفات script.js و style.css
+app.use(express.static(path.join(__dirname, 'public'))); 
+
+// 2. معالجة المسار الرئيسي (/) ليعرض index.html بدلاً من الرسالة النصية
+// *هذا يحل مشكلة ظهور الرسالة النصية!*
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// ===================================================
+// 💬  مسار الدردشة (Back-End Chat Route)
+// ===================================================
 
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
@@ -41,7 +60,7 @@ app.post("/chat", async (req, res) => {
         const errorMessage = errorDetails.error?.message || "خطأ غير محدد من Gemini API.";
         console.error("Gemini API Error:", response.status, errorMessage);
         
-        return res.status(response.status).json({ reply: `خطأ API: ${response.status} - ${errorMessage}` });
+        return res.status(response.status).json({ reply: خطأ API: ${response.status} - ${errorMessage} });
     }
     
     const data = await response.json();
@@ -56,5 +75,5 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 3000; // استخدام PORT من متغيرات البيئة لـ Render
+app.listen(PORT, () => console.log(✅ Server running and serving frontend on port ${PORT}));
