@@ -3,9 +3,9 @@ import fetch from "node-fetch";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import { fileURLToPath } from "url"; // لضمان عمل مسارات الملفات مع ES Modules
+import { fileURLToPath } from "url";
 
-// 🛠  تحديد المسارات المطلوبة (ضروري لبيئة Render)
+// 🛠  تحديد المسارات المطلوبة لبيئة ES Modules على Render
 const __filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
 
@@ -19,7 +19,6 @@ app.use(express.json());
 
 // ===================================================
 // 🌐  خدمة ملفات الواجهة الأمامية (Frontend)
-// *هذا الجزء يحل مشكلة ظهور الواجهة بدلاً من الرسالة النصية*
 // ===================================================
 
 // 1. يخدم الملفات الثابتة (CSS, JS, images) من مجلد public
@@ -57,6 +56,7 @@ app.post("/chat", async (req, res) => {
         const errorDetails = await response.json();
         const errorMessage = errorDetails.error?.message || "خطأ غير محدد من Gemini API.";
         
+        // *هذا السطر هو الذي كان يتعرض للخطأ في بناء الجملة (Syntax Error)*
         return res.status(response.status).json({ reply: خطأ API: ${response.status} - ${errorMessage} });
     }
     
@@ -72,5 +72,5 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000; // استخدام PORT من متغيرات البيئة لـ Render
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(✅ Server running and serving frontend on port ${PORT}));
