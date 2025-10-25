@@ -3,9 +3,9 @@ import fetch from "node-fetch";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
-import { fileURLToPath } from "url"; // لجعل المسارات تعمل مع ES Modules
+import { fileURLToPath } from "url"; // لضمان عمل مسارات الملفات مع ES Modules
 
-// تعريف مسارات العمل للملفات (ضروري لـ Render)
+// 🛠  تحديد المسارات المطلوبة (ضروري لبيئة Render)
 const __filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
 
@@ -18,15 +18,14 @@ app.use(cors());
 app.use(express.json());
 
 // ===================================================
-// 🛠  كود خدمة الواجهة الأمامية (Frontend)
+// 🌐  خدمة ملفات الواجهة الأمامية (Frontend)
+// *هذا الجزء يحل مشكلة ظهور الواجهة بدلاً من الرسالة النصية*
 // ===================================================
 
 // 1. يخدم الملفات الثابتة (CSS, JS, images) من مجلد public
-// هذا يسمح للمتصفح بتحميل ملفات script.js و style.css
 app.use(express.static(path.join(__dirname, 'public'))); 
 
-// 2. معالجة المسار الرئيسي (/) ليعرض index.html بدلاً من الرسالة النصية
-// *هذا يحل مشكلة ظهور الرسالة النصية!*
+// 2. المسار الرئيسي (/) يعرض index.html من مجلد public
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -39,12 +38,11 @@ app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
   try {
-    // نقطة نهاية Gemini API (gemini-2.5-flash)
+    // نقطة نهاية Gemini API
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // تمرير مفتاح Gemini API
         "x-goog-api-key": process.env.GEMINI_API_KEY 
       },
       body: JSON.stringify({
@@ -58,7 +56,6 @@ app.post("/chat", async (req, res) => {
     if (!response.ok) {
         const errorDetails = await response.json();
         const errorMessage = errorDetails.error?.message || "خطأ غير محدد من Gemini API.";
-        console.error("Gemini API Error:", response.status, errorMessage);
         
         return res.status(response.status).json({ reply: خطأ API: ${response.status} - ${errorMessage} });
     }
@@ -66,7 +63,7 @@ app.post("/chat", async (req, res) => {
     const data = await response.json();
     
     // قراءة محتوى الرد من استجابة Gemini
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "ما في رد من السيرفر (تحقق من مفتاح GEMINI_API_KEY).";
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم استلام رد من Gemini.";
 
     res.json({ reply });
   } catch (error) {
