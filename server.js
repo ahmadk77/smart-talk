@@ -1,11 +1,15 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const cors = require("cors");
-require("dotenv").config();
+const dotenv = require("dotenv");
 const path = require("path");
 
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
+
+// تعريف __dirname للمشاريع التي تستخدم require
+const __dirname = path.resolve(); // هذا يضمن أن يتم تحديد المسار الصحيح
 
 // Middleware Setup
 app.use(cors());
@@ -15,9 +19,9 @@ app.use(express.json());
 // 🌐  Frontend Serving Routes
 // ===================================================
 
-// Route to check server status (for initial connection)
+// Route to check server status (للتأكد من أن السيرفر يعمل)
 app.get("/status", (req, res) => {
-    res.send("SmartTalk Server is running!");
+    res.send("✅ SmartTalk Server is running!");
 });
 
 // Serve static files (CSS, JS) from the public folder
@@ -59,7 +63,6 @@ app.post("/chat", async (req, res) => {
             const errorMessage = errorDetails.error?.message || "Unknown API Error.";
             console.error("Gemini API Error:", response.status, errorMessage);
             
-            // *هذا السطر مصحح بالكامل لتجنب خطأ الترميز*
             return res.status(response.status).json({
                 reply: API Error: ${response.status} - ${errorMessage}. Please check API Key. 
             });
