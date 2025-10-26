@@ -1,51 +1,45 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
-import "dotenv/config";
-import path from "path";
-import { fileURLToPath } from "url"; 
-
-// 🛠  تحديد المسارات المطلوبة (ضروري لـ Render و ES Modules)
-const __filename = fileURLToPath(import.meta.url);
-const _dirname = path.dirname(_filename);
+const express = require("express");
+const fetch = require("node-fetch");
+const cors = require("cors");
+require("dotenv").config();
+const path = require("path");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// إعدادات CORS و JSON Middleware
+// Middleware Setup
 app.use(cors());
 app.use(express.json());
 
 // ===================================================
-// 🌐  خدمة ملفات الواجهة الأمامية (Frontend)
+// 🌐  Frontend Serving Routes
 // ===================================================
 
-// راوت بسيط لتفقد السيرفر (يظهر الرسالة الخضراء)
+// Route to check server status (for initial connection)
 app.get("/status", (req, res) => {
-    res.send("✅ SmartTalk Server is running!");
+    res.send("SmartTalk Server is running!");
 });
 
-// يخدم الملفات الثابتة (CSS, JS) من مجلد public
+// Serve static files (CSS, JS) from the public folder
 app.use(express.static(path.join(__dirname, 'public'))); 
 
-// المسار الرئيسي (/) يعرض index.html من مجلد public
+// Main route (/) serves index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ===================================================
-// 💬  مسار الدردشة (Back-End Chat Route)
+// 💬  Chat Route with Clean Error Handling
 // ===================================================
 
 app.post("/chat", async (req, res) => {
     const userMessage = req.body.message;
 
     if (!userMessage) {
-        return res.status(400).json({ reply: "الرجاء إرسال رسالة." });
+        return res.status(400).json({ reply: "Error: No message provided." });
     }
 
     try {
-        // نقطة نهاية Gemini API
         const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
             method: "POST",
             headers: {
@@ -65,7 +59,7 @@ app.post("/chat", async (req, res) => {
             const errorMessage = errorDetails.error?.message || "Unknown API Error.";
             console.error("Gemini API Error:", response.status, errorMessage);
             
-            // *السطر الحاسم المصحح (نص الخطأ أصبح إنجليزياً نظيفاً):*
+            // *هذا السطر مصحح بالكامل لتجنب خطأ الترميز*
             return res.status(response.status).json({
                 reply: API Error: ${response.status} - ${errorMessage}. Please check API Key. 
             });
@@ -73,18 +67,16 @@ app.post("/chat", async (req, res) => {
 
         const data = await response.json();
         
-        // قراءة محتوى الرد من استجابة Gemini
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم استلام رد من الذكاء الاصطناعي.";
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI response not received.";
 
         res.json({ reply });
 
     } catch (error) {
         console.error("Internal Server Error:", error);
-        res.status(500).json({ reply: "خطأ داخلي في السيرفر." });
+            res.status(500).json({ reply: "Internal Server Error." });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(✅ Server running on http://localhost:${PORT});
+app.listen(port, () => {
+    console.log(✅ Server running and serving frontend on port ${port});
 });
